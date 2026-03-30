@@ -184,22 +184,30 @@
   .breakdown-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 44px; }
   .breakdown-row { background: var(--white); border: 1px solid var(--border); padding: 18px 22px; }
   .breakdown-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .breakdown-name { font-size: 14px; font-weight: 500; color: var(--text-body); }
+  .breakdown-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .dimension-feedback-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent); margin-top: 16px; margin-bottom: 8px;
+  }
+  .dimension-feedback-text {
+    font-size: 13.5px; color: var(--text-body); line-height: 1.78;
+    padding-top: 10px; border-top: 1px solid var(--border);
+  }
   .breakdown-score { font-size: 20px; font-weight: 700; color: var(--accent); white-space: nowrap; }
   .breakdown-bar-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
   .breakdown-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .7s ease; }
 
 
   .save-pdf-btn {
-    display: inline-flex; align-items: center; gap: 8px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     background: var(--accent); color: #fff; font-family: inherit;
-    font-size: 13px; font-weight: 600; letter-spacing: .08em;
-    padding: 13px 28px; border: none; cursor: pointer;
-    transition: background .2s; margin-bottom: 12px;
+    font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+    padding: 13px 28px; border: 2px solid var(--accent); cursor: pointer;
+    transition: all .2s; margin-bottom: 12px; min-width: 220px;
   }
-  .save-pdf-btn:hover { background: var(--accent-mid); }
+  .save-pdf-btn:hover { background: var(--accent-mid); border-color: var(--accent-mid); }
 
-  .reset-btn { background: transparent; border: 2px solid var(--border-dark); color: var(--text-label); font-family: inherit; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; padding: 13px 28px; cursor: pointer; transition: all .2s; }
+  .reset-btn { background: transparent; border: 2px solid var(--border-dark); color: var(--text-label); font-family: inherit; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; padding: 13px 28px; cursor: pointer; transition: all .2s; min-width: 220px; }
   .reset-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
 
 
@@ -479,6 +487,14 @@ function submitAssessment(){
   },100);
 }
 
+var DIMENSION_FEEDBACK = {
+  'Control vs. Leverage': 'This dimension reflects the extent to which you operate as a leverage-based leader rather than a central point of execution. Higher scores indicate that work flows through your team with minimal unnecessary intervention, and that you allow ownership to remain where it has been assigned. You are not absorbing work under pressure, and escalation patterns are appropriate rather than habitual. Lower scores suggest that you are still functioning as the execution engine, either by stepping back into delegated work or by holding onto decisions longer than needed. This creates bottlenecks, reduces ownership across the team, and limits scalability. Strengthening this area requires disciplined restraint — specifically defining when intervention is truly necessary and consistently allowing others to carry work through to completion.',
+  'Delegation Quality': 'This dimension assesses how effectively you structure delegation, not just whether you delegate. High scores indicate that you assign ownership with clarity, define outcomes precisely, and align work with both business needs and individual development. Delegation at this level builds capability while delivering results. Lower scores typically reflect task distribution without full ownership transfer, where work returns incomplete, misaligned, or requiring rework. In these cases, delegation reduces workload only partially and does not shift accountability. Improving this dimension requires elevating delegation from assigning activities to assigning outcomes — ensuring that each piece of work has a single accountable owner and a clearly defined definition of success.',
+  'Authority & Decision Rights': 'This dimension focuses on how clearly decision-making authority is defined and exercised. Strong performance here means that individuals understand what they own, when they can act independently, and when escalation is required. Decision boundaries are explicit, and you are not required for routine decisions. Lower scores indicate that delegation occurs without corresponding authority, leaving you as the default decision-maker. This leads to hesitation, over-escalation, and slower execution. Strengthening this area requires explicitly defining decision ownership at the time of delegation, clarifying thresholds for escalation, and consistently reinforcing authority by supporting team members when they act within those boundaries.',
+  'System Strength': 'This dimension evaluates whether your team operates as a self-sustaining system or remains dependent on your involvement. High scores indicate that work continues effectively in your absence, issues are anticipated and addressed early, and the team maintains momentum without requiring constant validation. Lower scores suggest that progress slows or stalls when you are not directly engaged, and that the team relies on you to maintain continuity. This dependency limits scalability and increases leadership strain. Improving system strength involves identifying and removing dependency points, delegating ownership of workflows rather than individual tasks, and building the team\'s ability to operate proactively rather than reactively.',
+  'Follow-Through Without Micromanagement': 'This dimension measures how effectively you maintain accountability after delegation without reverting to micromanagement. High scores reflect a balanced approach where check-ins focus on progress and decision-making rather than task monitoring, feedback is timely and constructive, and accountability is consistently reinforced. Lower scores indicate either over-involvement — where check-ins become controlling — or under-engagement, where issues surface too late and you end up compensating for performance gaps. Strengthening this dimension requires establishing a structured cadence for follow-up, focusing conversations on outcomes and decisions, and addressing underperformance directly rather than absorbing the work yourself.'
+};
+
 function renderResults(total,sections){
   document.getElementById('result-score').textContent=total;
   var band=BANDS.find(function(b){return total>=b.min&&total<=b.max;});
@@ -492,9 +508,13 @@ function renderResults(total,sections){
   grid.innerHTML='';
   sections.forEach(function(s){
     var pct=Math.round(s.score/s.max*100);
+    var feedback=DIMENSION_FEEDBACK[s.name]||'';
     var row=document.createElement('div');
     row.className='breakdown-row';
-    row.innerHTML='<div class="breakdown-top"><span class="breakdown-name">'+s.name+'</span><span class="breakdown-score">'+s.score+' / '+s.max+'</span></div><div class="breakdown-bar-track"><div class="breakdown-bar-fill" data-pct="'+pct+'" style="width:0%"></div></div>';
+    row.innerHTML=
+      '<div class="breakdown-top"><span class="breakdown-name">'+s.name+'</span><span class="breakdown-score">'+s.score+' / '+s.max+'</span></div>'+
+      '<div class="breakdown-bar-track"><div class="breakdown-bar-fill" data-pct="'+pct+'" style="width:0%"></div></div>'+
+      (feedback ? '<div class="dimension-feedback-label">Dimension-Based Feedback</div><div class="dimension-feedback-text">'+feedback+'</div>' : '');
     grid.appendChild(row);
   });
 }
